@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR</title>
+    <script src="https://cdn.rawgit.com/naptha/tesseract.js/1.0.10/dist/tesseract.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+</head>
+
+<body>
+    <div class="text-center">
+        <h1>OCR SYSTEM</h1>
+        <br><br>
+          <label for="imageInput" class="h6">Upload Your File : </label>
+          <input type="file" id="imageInput" accept="image/*" class="form-label border border-dark rounded">
+          <br>
+          <div id="emailHelp" class ="text-danger">Please make sure that file is clearly visible and does not contain the extra content other than text.</div>
+          <br>
+            <label for="recognition-progress" class="h5">File recognition progress:</label>
+           <div>0% <progress id="recognition-progress" max="100" value="0" style="width: 35%; height: 1.5rem;" class=""></progress>100%</div>
+            <br>
+            <img id="selectedImage" class="" style="max-width: 100%;" >
+        <div id="result" class="h4 m-5"></div>
+    </div>
+    
+
+
+    <script>
+        document.getElementById("imageInput").addEventListener("change", handleImage);
+        function handleImage() {
+            const recognitionProgressElement = document.querySelector('#recognition-progress');
+            const input = document.getElementById("imageInput");
+            const image = document.getElementById("selectedImage");
+            const resultContainer = document.getElementById("result");
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    image.src = e.target.result;
+                    //performing OCR
+                    Tesseract.recognize(
+                        // image.src,
+                        file, {
+                        lang: 'eng'
+                    },
+                        { logger: info => console.log(info) } //optinal logger
+                    ).progress(({ progress, status }) => {
+                        if (!progress || !status || status !== 'recognizing text') {
+                            return null;
+                        }
+                        const p = (progress * 100).toFixed(2);
+                        recognitionProgressElement.textContent = `${status}: ${p}%`;
+                        recognitionProgressElement.value = p;
+                    }).then(function (value, status) {
+                        const paragraphsElements = value.paragraphs.map(({ text }) => {
+                            const p = document.createElement('p');
+                            p.textContent = text;
+                            return p;
+                        })
+                        resultContainer.append(...paragraphsElements);
+                    });
+                        ({ data: { text } }) => {
+                        resultContainer.innerText = text;
+                    };
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+    </script>
+</body>
+
+</html>
